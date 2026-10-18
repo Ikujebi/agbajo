@@ -1,37 +1,56 @@
-# Neighborhood mobile app (Expo + React Native + TypeScript)
+# Welcome to your Expo app 👋
 
-## Setup
-```bash
-npx create-expo-app@latest neighborhood-app --template blank-typescript
-cd neighborhood-app
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-# Expo-managed native modules (picks versions matching your Expo SDK)
-npx expo install react-native-screens react-native-safe-area-context expo-secure-store expo-camera react-native-svg expo-status-bar
+## Get started
 
-# JS libraries
-npm i @react-navigation/native @react-navigation/native-stack @react-navigation/bottom-tabs \
-      @tanstack/react-query axios zustand socket.io-client react-native-qrcode-svg
-```
-Then copy this package's `App.tsx` (overwrite) and the `src/` folder into the project root.
+1. Install dependencies
 
-1. Copy `.env.example` to `.env` and set `EXPO_PUBLIC_API_URL` to your computer's LAN IP + port 3000
-   (phone and computer on the same Wi-Fi), or your deployed API URL.
-2. Add the camera plugin to `app.json`:
-   ```json
-   "plugins": [["expo-camera", { "cameraPermission": "Allow camera access to scan visitor QR codes at the gate." }]]
+   ```bash
+   npm install
    ```
-3. `npx expo start`, then scan the QR code with Expo Go.
-   (Camera + secure storage work in Expo Go. Push notifications will need a development build later.)
 
-## Screens
-- Auth: login / register (phone or email)
-- Home: my communities + role-based actions (admin: members, email; security: gate; shop staff: manage shop)
-- Join: search estates / churches / mosques and request to join; Register: create one (you become admin)
-- Members (admin): approve/reject requests, make security / admin, suspend
-- Visitors: create pass (code + QR), share via WhatsApp/SMS, revoke
-- Gate (security): scan QR or type code -> big ALLOW / DENY card, exit logging, recent activity
-- Shops: browse products with live stock; Manage shop: add products, +/- stock
-- Chat: realtime (Socket.IO), message requests, new chat by search or estate directory
-- Profile: chat privacy (Everyone / My communities / By request / Admins only), log out
+2. Start the app
 
-## Needs the backend with the /users endpoints (included in the latest neighborhood-api.zip)
+   ```bash
+   npx expo start
+   ```
+
+In the output, you'll find options to open the app in a
+
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+
+You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+
+## Get a fresh project
+
+When you're ready, run:
+
+```bash
+npm run reset-project
+```
+
+This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+
+### Other setup steps
+
+- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
+- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
+- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+
+## Learn more
+
+To learn more about developing your project with Expo, look at the following resources:
+
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+
+## Join the community
+
+Join our community of developers creating universal apps.
+
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
