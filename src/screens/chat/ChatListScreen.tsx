@@ -29,15 +29,19 @@ export default function ChatListScreen() {
       <Button title="+ New chat" onPress={() => nav.navigate('NewChat')} />
       <View style={{ height: 12 }} />
       <FlatList
-        data={list} keyExtractor={(c) => c.id}
-        onRefresh={() => { convos.refetch(); reqs.refetch(); }} refreshing={convos.isRefetching}
+        data={list} 
+        keyExtractor={(c) => c.id}
+        onRefresh={() => { convos.refetch(); reqs.refetch(); }} 
+        refreshing={convos.isRefetching}
         ListHeaderComponent={
           (reqs.data?.length ?? 0) > 0 ? (
             <View style={{ marginBottom: 8 }}>
-              <Text style={{ fontWeight: '700', marginBottom: 8 }}>Message requests</Text>
+              <Text style={{ fontWeight: '700', fontSize: 15, marginBottom: 8, color: colors.text }}>
+                Message requests
+              </Text>
               {reqs.data!.map((r) => (
                 <Card key={r.id} onPress={() => nav.navigate('Chat', { recipientId: r.other.id, name: r.other.fullName, conversationId: r.id })}>
-                  <Text style={{ fontWeight: '700' }}>{r.other.fullName}</Text>
+                  <Text style={{ fontWeight: '700', color: colors.text }}>{r.other.fullName}</Text>
                   <Muted>{r.lastMessage?.body}</Muted>
                   <Row style={{ marginTop: 8 }}>
                     <Button small title="Accept" onPress={() => respond.mutate({ id: r.id, accept: true })} />
@@ -45,14 +49,16 @@ export default function ChatListScreen() {
                   </Row>
                 </Card>
               ))}
-              <Text style={{ fontWeight: '700', marginVertical: 8 }}>Chats</Text>
+              <Text style={{ fontWeight: '700', fontSize: 15, marginVertical: 8, color: colors.text }}>
+                Chats
+              </Text>
             </View>
-          ) : null
+          ) : undefined
         }
         ListEmptyComponent={<Empty text="No chats yet. Start one with a neighbor or your estate admin." />}
         renderItem={({ item }) => (
           <Card onPress={() => nav.navigate('Chat', { recipientId: item.other.id, name: item.other.fullName, conversationId: item.id })}>
-            <Text style={{ fontWeight: '700', fontSize: 16 }}>{item.other.fullName}</Text>
+            <Text style={{ fontWeight: '700', fontSize: 16, color: colors.text }}>{item.other.fullName}</Text>
             <Muted>
               {item.status === 'REQUESTED' ? '⏳ Waiting for them to accept · ' : ''}
               {item.lastMessage?.body ?? ''}
