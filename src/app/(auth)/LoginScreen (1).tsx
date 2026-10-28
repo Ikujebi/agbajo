@@ -1,30 +1,36 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from "expo-router";
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import {
-  AccessibilityInfo,
-  ActivityIndicator,
-  Animated,
-  Easing,
-  Image,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { Link } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+    AccessibilityInfo,
+    ActivityIndicator,
+    Animated,
+    Easing,
+    Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { api, errMsg } from '@/api/client';
-import { useAuth } from '@/store/auth';
-import { useToast } from '@/components/Toast';
-import { isEmail, isNgPhone } from '@/lib/validators';
-import { colors } from '@/theme';
+import { api, errMsg } from "@/api/client";
+import { useToast } from "@/components/Toast";
+import { isEmail, isNgPhone } from "@/lib/validators";
+import { useAuth } from "@/store/auth";
+import { colors } from "@/theme";
 
-type Field = 'identifier' | 'password';
+type Field = "identifier" | "password";
 
 /**
  * Emails are only trimmed. Phone numbers also lose spaces, dashes and
@@ -33,8 +39,8 @@ type Field = 'identifier' | 'password';
  */
 const normalizeIdentifier = (raw: string) => {
   const trimmed = raw.trim();
-  if (trimmed.includes('@')) return trimmed;
-  return trimmed.replace(/[\s\-().]/g, '');
+  if (trimmed.includes("@")) return trimmed;
+  return trimmed.replace(/[\s\-().]/g, "");
 };
 
 export default function LoginScreen() {
@@ -42,8 +48,8 @@ export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const setSession = useAuth((s) => s.setSession);
 
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState<Field | null>(null);
@@ -51,7 +57,7 @@ export default function LoginScreen() {
     identifier: false,
     password: false,
   });
-  const [formError, setFormError] = useState('');
+  const [formError, setFormError] = useState("");
 
   const passwordRef = useRef<React.ComponentRef<typeof TextInput>>(null);
   const inFlight = useRef(false); // guards against double taps / double Enter
@@ -70,16 +76,16 @@ export default function LoginScreen() {
 
   // Only nag after the user has interacted, and never on an untouched field.
   const identifierError = useMemo(() => {
-    if (!touched.identifier) return '';
-    if (!identifier.trim()) return 'Enter your email address or phone number.';
+    if (!touched.identifier) return "";
+    if (!identifier.trim()) return "Enter your email address or phone number.";
     if (!isValidIdentifier) {
-      return 'That doesn’t look like a valid email or Nigerian phone number.';
+      return "That doesn’t look like a valid email or Nigerian phone number.";
     }
-    return '';
+    return "";
   }, [touched.identifier, identifier, isValidIdentifier]);
 
   const passwordError =
-    touched.password && !password ? 'Enter your password.' : '';
+    touched.password && !password ? "Enter your password." : "";
 
   const runShake = useCallback(() => {
     AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
@@ -102,7 +108,7 @@ export default function LoginScreen() {
     if (inFlight.current) return;
 
     setTouched({ identifier: true, password: true });
-    setFormError('');
+    setFormError("");
 
     if (!isValidIdentifier) {
       runShake();
@@ -119,7 +125,7 @@ export default function LoginScreen() {
     Keyboard.dismiss();
 
     try {
-      const { data } = await api.post('/auth/login', {
+      const { data } = await api.post("/auth/login", {
         identifier: normalized,
         password,
       });
@@ -128,7 +134,7 @@ export default function LoginScreen() {
     } catch (error) {
       const message = errMsg(error);
       if (mounted.current) setFormError(message);
-      toast.show(message, 'error');
+      toast.show(message, "error");
       runShake();
     } finally {
       inFlight.current = false;
@@ -142,7 +148,7 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.screen}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
         contentContainerStyle={[
@@ -153,7 +159,7 @@ export default function LoginScreen() {
           },
         ]}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
@@ -161,7 +167,7 @@ export default function LoginScreen() {
           <View style={styles.brand}>
             <View style={styles.logoContainer}>
               <Image
-                source={require('../../../assets/images/logo.png')}
+                source={require("../../../assets/images/logo.png")}
                 style={styles.logo}
                 resizeMode="contain"
                 accessible
@@ -175,7 +181,7 @@ export default function LoginScreen() {
               accessibilityRole="header"
               maxFontSizeMultiplier={1.2}
             >
-              Agbajo
+              Adugbo{" "}
             </Text>
 
             <Text style={styles.tagline} maxFontSizeMultiplier={1.3}>
@@ -212,7 +218,7 @@ export default function LoginScreen() {
               <TextInput
                 style={[
                   styles.input,
-                  focused === 'identifier' && styles.inputFocused,
+                  focused === "identifier" && styles.inputFocused,
                   !!identifierError && styles.inputError,
                 ]}
                 placeholder="name@example.com or 08012345678"
@@ -220,12 +226,12 @@ export default function LoginScreen() {
                 value={identifier}
                 onChangeText={(text) => {
                   setIdentifier(text);
-                  if (formError) setFormError('');
+                  if (formError) setFormError("");
                 }}
-                onFocus={() => setFocused('identifier')}
+                onFocus={() => setFocused("identifier")}
                 onBlur={() => {
-                  setFocused((f) => (f === 'identifier' ? null : f));
-                  if (identifier.length > 0) markTouched('identifier');
+                  setFocused((f) => (f === "identifier" ? null : f));
+                  if (identifier.length > 0) markTouched("identifier");
                 }}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -244,10 +250,7 @@ export default function LoginScreen() {
               />
 
               {!!identifierError && (
-                <Text
-                  style={styles.errorText}
-                  accessibilityLiveRegion="polite"
-                >
+                <Text style={styles.errorText} accessibilityLiveRegion="polite">
                   {identifierError}
                 </Text>
               )}
@@ -277,7 +280,7 @@ export default function LoginScreen() {
               <View
                 style={[
                   styles.passwordContainer,
-                  focused === 'password' && styles.inputFocused,
+                  focused === "password" && styles.inputFocused,
                   !!passwordError && styles.inputError,
                 ]}
               >
@@ -289,12 +292,12 @@ export default function LoginScreen() {
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
-                    if (formError) setFormError('');
+                    if (formError) setFormError("");
                   }}
-                  onFocus={() => setFocused('password')}
+                  onFocus={() => setFocused("password")}
                   onBlur={() => {
-                    setFocused((f) => (f === 'password' ? null : f));
-                    if (password.length > 0) markTouched('password');
+                    setFocused((f) => (f === "password" ? null : f));
+                    if (password.length > 0) markTouched("password");
                   }}
                   secureTextEntry={!showPassword}
                   autoComplete="current-password"
@@ -316,21 +319,18 @@ export default function LoginScreen() {
                   disabled={loading}
                   accessibilityRole="button"
                   accessibilityLabel={
-                    showPassword ? 'Hide password' : 'Show password'
+                    showPassword ? "Hide password" : "Show password"
                   }
                   style={styles.showWrap}
                 >
                   <Text style={styles.showPassword}>
-                    {showPassword ? 'Hide' : 'Show'}
+                    {showPassword ? "Hide" : "Show"}
                   </Text>
                 </Pressable>
               </View>
 
               {!!passwordError && (
-                <Text
-                  style={styles.errorText}
-                  accessibilityLiveRegion="polite"
-                >
+                <Text style={styles.errorText} accessibilityLiveRegion="polite">
                   {passwordError}
                 </Text>
               )}
@@ -341,9 +341,9 @@ export default function LoginScreen() {
               onPress={submit}
               disabled={loading}
               accessibilityRole="button"
-              accessibilityLabel={loading ? 'Signing in' : 'Sign in'}
+              accessibilityLabel={loading ? "Signing in" : "Sign in"}
               accessibilityState={{ disabled: loading, busy: loading }}
-              android_ripple={{ color: 'rgba(255,255,255,0.18)' }}
+              android_ripple={{ color: "rgba(255,255,255,0.18)" }}
               style={({ pressed }) => [
                 styles.submitButton,
                 pressed && !loading && styles.submitButtonPressed,
@@ -384,39 +384,39 @@ export default function LoginScreen() {
   );
 }
 
-const BRAND_GREEN = colors?.primary ?? '#1A4D2E';
+const BRAND_GREEN = colors?.primary ?? "#1A4D2E";
 // Orange text on white is ~2.9:1, which fails WCAG AA for small text.
 // Darker orange for text; keep the brighter one for non-text accents.
-const BRAND_ORANGE_TEXT = '#C2570C';
-const PLACEHOLDER = '#94A3B8';
-const ERROR = '#DC2626';
+const BRAND_ORANGE_TEXT = "#C2570C";
+const PLACEHOLDER = "#94A3B8";
+const ERROR = "#DC2626";
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: "#F8FAFC",
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 22,
   },
   container: {
-    width: '100%',
+    width: "100%",
     maxWidth: 440,
-    alignSelf: 'center',
+    alignSelf: "center",
   },
   brand: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 28,
   },
   logoContainer: {
     width: 84,
     height: 84,
     borderRadius: 24,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 12,
     shadowColor: BRAND_GREEN,
     shadowOpacity: 0.1,
@@ -430,24 +430,24 @@ const styles = StyleSheet.create({
   },
   brandName: {
     fontSize: 32,
-    fontWeight: '800',
+    fontWeight: "800",
     letterSpacing: -0.8,
     color: BRAND_GREEN,
   },
   tagline: {
     fontSize: 14,
     lineHeight: 21,
-    color: '#475569',
-    textAlign: 'center',
+    color: "#475569",
+    textAlign: "center",
     marginTop: 6,
     maxWidth: 310,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 22,
     padding: 24,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: "#E2E8F0",
     shadowColor: BRAND_GREEN,
     shadowOpacity: 0.06,
     shadowRadius: 24,
@@ -456,21 +456,21 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: "800",
     letterSpacing: -0.5,
-    color: '#0F172A',
+    color: "#0F172A",
   },
   subtitle: {
     fontSize: 14,
     lineHeight: 21,
-    color: '#475569',
+    color: "#475569",
     marginTop: 4,
     marginBottom: 24,
   },
   formError: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: "#FEF2F2",
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: "#FECACA",
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -479,42 +479,42 @@ const styles = StyleSheet.create({
   formErrorText: {
     fontSize: 13,
     lineHeight: 19,
-    color: '#B91C1C',
-    fontWeight: '600',
+    color: "#B91C1C",
+    fontWeight: "600",
   },
   field: {
     marginBottom: 18,
   },
   labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   label: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#334155',
+    fontWeight: "700",
+    color: "#334155",
     marginBottom: 8,
   },
   forgotWrap: {
     minHeight: 24,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   forgotPassword: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
     color: BRAND_ORANGE_TEXT,
   },
   input: {
     minHeight: 52,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: "#CBD5E1",
     borderRadius: 12,
     paddingHorizontal: 15,
     fontSize: 16, // 16+ prevents iOS zoom and reads comfortably
-    color: '#0F172A',
-    backgroundColor: '#FFFFFF',
+    color: "#0F172A",
+    backgroundColor: "#FFFFFF",
   },
   inputFocused: {
     borderColor: BRAND_GREEN,
@@ -526,44 +526,44 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 12,
     lineHeight: 17,
-    color: '#B91C1C',
+    color: "#B91C1C",
     marginTop: 6,
   },
   passwordContainer: {
     minHeight: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: "#CBD5E1",
     borderRadius: 12,
     paddingLeft: 15,
     paddingRight: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   passwordInput: {
     flex: 1,
     minHeight: 50,
     fontSize: 16,
-    color: '#0F172A',
+    color: "#0F172A",
   },
   showWrap: {
     minHeight: 44,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingLeft: 10,
   },
   showPassword: {
     color: BRAND_GREEN,
-    fontWeight: '700',
+    fontWeight: "700",
     fontSize: 14,
   },
   submitButton: {
     height: 54,
     backgroundColor: BRAND_GREEN,
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   submitButtonPressed: {
     opacity: 0.88,
@@ -573,35 +573,35 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   submitButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   registerRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 22,
     gap: 5,
   },
   registerText: {
-    color: '#475569',
+    color: "#475569",
     fontSize: 14,
   },
   registerLink: {
     color: BRAND_ORANGE_TEXT,
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   pressedText: {
     opacity: 0.6,
   },
   footer: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 12,
     lineHeight: 19,
-    color: '#64748B',
+    color: "#64748B",
     marginTop: 24,
   },
 });

@@ -1,4 +1,4 @@
-
+import { Link } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,12 +12,11 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Link } from 'expo-router';
 
 import { api, errMsg } from '@/api/client';
-import { useAuth } from '@/store/auth';
 import { useToast } from '@/components/Toast';
 import { isEmail, isNgPhone } from '@/lib/validators';
+import { useAuth } from '@/store/auth';
 
 type RegisterFields = {
   fullName: string;
@@ -28,6 +27,10 @@ type RegisterFields = {
 };
 
 type FieldName = keyof RegisterFields;
+
+const BRAND_PURPLE = '#6D28D9';
+const BRAND_RED_TEXT = '#BE123C';
+const PLACEHOLDER = '#9A8BAF';
 
 export default function RegisterScreen() {
   const toast = useToast();
@@ -44,6 +47,7 @@ export default function RegisterScreen() {
   const [touched, setTouched] = useState<
     Partial<Record<FieldName, boolean>>
   >({});
+  const [focused, setFocused] = useState<FieldName | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -154,19 +158,25 @@ export default function RegisterScreen() {
       <View
         style={[
           styles.inputWrapper,
-          visibleError(field) ? styles.inputError : null,
+          focused === field && styles.inputFocused,
+          !!visibleError(field) && styles.inputError,
         ]}
       >
         <TextInput
           style={styles.input}
           value={form[field]}
           onChangeText={(value) => updateField(field, value)}
-          onBlur={() => markTouched(field)}
+          onFocus={() => setFocused(field)}
+          onBlur={() => {
+            setFocused((f) => (f === field ? null : f));
+            markTouched(field);
+          }}
           placeholder={placeholder}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={PLACEHOLDER}
           keyboardType={options?.keyboardType ?? 'default'}
           autoCapitalize={options?.autoCapitalize ?? 'sentences'}
           autoCorrect={false}
+          spellCheck={false}
           secureTextEntry={
             options?.passwordToggle
               ? !options.toggleValue
@@ -180,6 +190,7 @@ export default function RegisterScreen() {
         {options?.passwordToggle && (
           <Pressable
             onPress={options.onToggle}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             style={styles.toggleButton}
             accessibilityRole="button"
             accessibilityLabel={
@@ -210,22 +221,29 @@ export default function RegisterScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
+          {/* Brand Header with Flush Rounded Logo */}
           <View style={styles.brand}>
-            <Image
-              source={require('../../../assets/images/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.brandName}>Agbajo</Text>
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('../../../assets/images/logo-purple.png')}
+                style={styles.logo}
+                resizeMode="cover"
+                accessible
+                accessibilityRole="image"
+                accessibilityLabel="Adugbo logo"
+              />
+            </View>
+            <Text style={styles.brandName}>Adugbo</Text>
             <Text style={styles.brandCaption}>
-              Your community. Connected.
+              Your community, closer.
             </Text>
           </View>
 
+          {/* Main Card Container */}
           <View style={styles.card}>
             <Text style={styles.heading}>Create your account</Text>
             <Text style={styles.subtitle}>
-              Join Agbajo to get started.
+              Join Adugbo to connect with your community.
             </Text>
 
             <View style={styles.form}>
@@ -233,7 +251,7 @@ export default function RegisterScreen() {
                 'fullName',
                 'Full name',
                 'Enter your full name',
-                { textContentType: 'name' },
+                { textContentType: 'name', autoCapitalize: 'words' },
               )}
 
               {renderField(
@@ -288,13 +306,14 @@ export default function RegisterScreen() {
                 disabled={loading}
                 style={({ pressed }) => [
                   styles.submitButton,
-                  pressed && !loading ? styles.buttonPressed : null,
-                  loading ? styles.buttonDisabled : null,
+                  pressed && !loading && styles.buttonPressed,
+                  loading && styles.buttonDisabled,
                 ]}
                 accessibilityRole="button"
+                accessibilityState={{ busy: loading, disabled: loading }}
               >
                 {loading ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
                   <Text style={styles.submitText}>Create account</Text>
                 )}
@@ -305,7 +324,10 @@ export default function RegisterScreen() {
                   Already have an account?
                 </Text>
                 <Link href="/(auth)/login" asChild>
-                  <Pressable accessibilityRole="link">
+                  <Pressable
+                    accessibilityRole="link"
+                    hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+                  >
                     <Text style={styles.loginLink}> Sign in</Text>
                   </Pressable>
                 </Link>
@@ -314,7 +336,7 @@ export default function RegisterScreen() {
           </View>
 
           <Text style={styles.footer}>
-            Secure registration for your Agbajo account
+            ESTATES · WORSHIP · LOCAL SHOPS · COMMUNITY
           </Text>
         </View>
       </ScrollView>
@@ -325,69 +347,81 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F3F6FC',
+    backgroundColor: '#FAF7FF',
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingVertical: 32,
+    paddingVertical: 28,
     paddingHorizontal: 20,
   },
   container: {
     width: '100%',
-    maxWidth: 460,
+    maxWidth: 420,
     alignSelf: 'center',
   },
   brand: {
     alignItems: 'center',
-    marginBottom: 28,
+    marginBottom: 24,
   },
-  logo: {
+  logoContainer: {
     width: 76,
     height: 76,
-    marginBottom: 8,
+    borderRadius: 22,
+    overflow: 'hidden',
+    marginBottom: 12,
+    shadowColor: BRAND_PURPLE,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  logo: {
+    width: '100%',
+    height: '100%',
   },
   brandName: {
-    color: '#1746A2',
-    fontSize: 28,
+    color: BRAND_PURPLE,
+    fontSize: 30,
     fontWeight: '800',
-    letterSpacing: 0.3,
+    letterSpacing: -0.6,
   },
   brandCaption: {
-    marginTop: 5,
-    color: '#64748B',
-    fontSize: 13,
+    marginTop: 4,
+    color: '#6E617E',
+    fontSize: 14,
+    lineHeight: 20,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 22,
+    borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: '#E7ECF4',
-    shadowColor: '#1E3A8A',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.07,
-    shadowRadius: 22,
+    borderColor: '#EBE0FA',
+    shadowColor: BRAND_PURPLE,
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 6 },
     elevation: 4,
   },
   heading: {
-    color: '#172554',
-    fontSize: 25,
+    color: '#1E1033',
+    fontSize: 22,
     fontWeight: '800',
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
   },
   subtitle: {
-    color: '#64748B',
+    color: '#6E617E',
     fontSize: 14,
-    lineHeight: 21,
-    marginTop: 8,
-    marginBottom: 24,
+    lineHeight: 20,
+    marginTop: 4,
+    marginBottom: 20,
   },
   form: {
-    gap: 17,
+    gap: 16,
   },
   fieldContainer: {
-    gap: 8,
+    gap: 6,
   },
   labelRow: {
     flexDirection: 'row',
@@ -395,12 +429,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   label: {
-    color: '#334155',
+    color: '#47365C',
     fontSize: 13,
     fontWeight: '700',
   },
   optional: {
-    color: '#94A3B8',
+    color: '#9A8BAF',
     fontSize: 12,
   },
   inputWrapper: {
@@ -408,76 +442,93 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#DCE3EF',
-    borderRadius: 12,
+    borderColor: '#D6C4EE',
+    borderRadius: 14,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 14,
   },
+  inputFocused: {
+    borderColor: BRAND_PURPLE,
+    borderWidth: 1.5,
+  },
   inputError: {
-    borderColor: '#DC2626',
+    borderColor: '#B91C1C',
   },
   input: {
     flex: 1,
     minWidth: 0,
     minHeight: 50,
-    color: '#172554',
-    fontSize: 14,
-    paddingVertical: 12,
+    color: '#1E1033',
+    fontSize: 15,
+    paddingVertical: 0,
   },
   toggleButton: {
-    paddingVertical: 10,
-    paddingLeft: 10,
+    justifyContent: 'center',
+    paddingLeft: 8,
+    paddingVertical: 4,
   },
   toggleText: {
-    color: '#1746A2',
-    fontSize: 12,
+    color: BRAND_PURPLE,
+    fontSize: 13,
     fontWeight: '700',
   },
   errorText: {
-    color: '#DC2626',
+    color: BRAND_RED_TEXT,
     fontSize: 12,
-    lineHeight: 17,
+    lineHeight: 16,
+    marginTop: 4,
+    marginLeft: 2,
   },
   submitButton: {
-    minHeight: 52,
-    marginTop: 6,
-    borderRadius: 12,
-    backgroundColor: '#1746A2',
+    height: 54,
+    marginTop: 8,
+    borderRadius: 14,
+    backgroundColor: BRAND_PURPLE,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
+    shadowColor: BRAND_PURPLE,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   buttonPressed: {
-    opacity: 0.85,
+    opacity: 0.9,
+    transform: [{ scale: 0.985 }],
   },
   buttonDisabled: {
-    opacity: 0.65,
+    opacity: 0.85,
   },
   submitText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
+    letterSpacing: 0.2,
   },
   loginRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     flexWrap: 'wrap',
-    marginTop: 3,
+    marginTop: 20,
+    gap: 4,
   },
   loginPrompt: {
-    color: '#64748B',
-    fontSize: 13,
+    color: '#6E617E',
+    fontSize: 14,
   },
   loginLink: {
-    color: '#1746A2',
-    fontSize: 13,
-    fontWeight: '800',
+    color: BRAND_RED_TEXT,
+    fontSize: 14,
+    fontWeight: '700',
   },
   footer: {
-    marginTop: 22,
+    marginTop: 24,
     textAlign: 'center',
-    color: '#94A3B8',
-    fontSize: 12,
+    color: '#7E718E',
+    fontSize: 11,
+    letterSpacing: 0.8,
+    lineHeight: 16,
   },
 });

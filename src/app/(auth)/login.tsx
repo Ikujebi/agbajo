@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from "expo-router";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   AccessibilityInfo,
   ActivityIndicator,
@@ -14,36 +21,33 @@ import {
   Text,
   TextInput,
   View,
-} from 'react-native';
-import { Link } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { api, errMsg } from '@/api/client';
-import { useAuth } from '@/store/auth';
-import { useToast } from '@/components/Toast';
-import { isEmail, isNgPhone } from '@/lib/validators';
-import { colors } from '@/theme';
+import { api, errMsg } from "@/api/client";
+import { useToast } from "@/components/Toast";
+import { isEmail, isNgPhone } from "@/lib/validators";
+import { useAuth } from "@/store/auth";
 
-type Field = 'identifier' | 'password';
+type Field = "identifier" | "password";
 
-/**
- * Emails are only trimmed. Phone numbers also lose spaces, dashes and
- * brackets so "0801 234 5678" and "(0801) 234-5678" both pass validation
- * and reach the API in one consistent shape.
- */
 const normalizeIdentifier = (raw: string) => {
   const trimmed = raw.trim();
-  if (trimmed.includes('@')) return trimmed;
-  return trimmed.replace(/[\s\-().]/g, '');
+  if (trimmed.includes("@")) return trimmed;
+  return trimmed.replace(/[\s\-().]/g, "");
 };
+
+const BRAND_PURPLE = "#6D28D9";
+const BRAND_RED_TEXT = "#BE123C";
+const PLACEHOLDER = "#9A8BAF";
 
 export default function LoginScreen() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const setSession = useAuth((s) => s.setSession);
 
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState<Field | null>(null);
@@ -51,10 +55,10 @@ export default function LoginScreen() {
     identifier: false,
     password: false,
   });
-  const [formError, setFormError] = useState('');
+  const [formError, setFormError] = useState("");
 
   const passwordRef = useRef<React.ComponentRef<typeof TextInput>>(null);
-  const inFlight = useRef(false); // guards against double taps / double Enter
+  const inFlight = useRef(false);
   const mounted = useRef(true);
   const shake = useRef(new Animated.Value(0)).current;
 
@@ -66,24 +70,27 @@ export default function LoginScreen() {
   }, []);
 
   const normalized = normalizeIdentifier(identifier);
-  const isValidIdentifier = isEmail(normalized) || isNgPhone(normalized);
+  const isValidIdentifier =
+    isEmail(normalized) || isNgPhone(normalized);
 
-  // Only nag after the user has interacted, and never on an untouched field.
   const identifierError = useMemo(() => {
-    if (!touched.identifier) return '';
-    if (!identifier.trim()) return 'Enter your email address or phone number.';
-    if (!isValidIdentifier) {
-      return 'That doesn’t look like a valid email or Nigerian phone number.';
+    if (!touched.identifier) return "";
+    if (!identifier.trim()) {
+      return "Enter your email address or phone number.";
     }
-    return '';
+    if (!isValidIdentifier) {
+      return "Enter a valid email or Nigerian phone number.";
+    }
+    return "";
   }, [touched.identifier, identifier, isValidIdentifier]);
 
   const passwordError =
-    touched.password && !password ? 'Enter your password.' : '';
+    touched.password && !password ? "Enter your password." : "";
 
   const runShake = useCallback(() => {
     AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
       if (reduce) return;
+
       shake.setValue(0);
       Animated.sequence(
         [10, -10, 6, -6, 0].map((toValue) =>
@@ -102,12 +109,13 @@ export default function LoginScreen() {
     if (inFlight.current) return;
 
     setTouched({ identifier: true, password: true });
-    setFormError('');
+    setFormError("");
 
     if (!isValidIdentifier) {
       runShake();
       return;
     }
+
     if (!password) {
       passwordRef.current?.focus();
       runShake();
@@ -119,54 +127,72 @@ export default function LoginScreen() {
     Keyboard.dismiss();
 
     try {
-      const { data } = await api.post('/auth/login', {
+      const { data } = await api.post("/auth/login", {
         identifier: normalized,
         password,
       });
-      await setSession(data.user, data.accessToken, data.refreshToken);
-      // On success the auth guard navigates away; nothing else to do here.
+
+      await setSession(
+        data.user,
+        data.accessToken,
+        data.refreshToken,
+      );
     } catch (error) {
       const message = errMsg(error);
+
       if (mounted.current) setFormError(message);
-      toast.show(message, 'error');
+
+      toast.show(message, "error");
       runShake();
     } finally {
       inFlight.current = false;
       if (mounted.current) setLoading(false);
     }
-  }, [isValidIdentifier, normalized, password, runShake, setSession, toast]);
+  }, [
+    isValidIdentifier,
+    normalized,
+    password,
+    runShake,
+    setSession,
+    toast,
+  ]);
 
-  const markTouched = (field: Field) =>
-    setTouched((prev) => (prev[field] ? prev : { ...prev, [field]: true }));
+  const markTouched = (field: Field) => {
+    setTouched((prev) =>
+      prev[field] ? prev : { ...prev, [field]: true },
+    );
+  };
 
   return (
     <KeyboardAvoidingView
       style={styles.screen}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: Math.max(insets.top, 16) + 16,
-            paddingBottom: Math.max(insets.bottom, 16) + 16,
+            paddingTop: Math.max(insets.top, 20) + 12,
+            paddingBottom: Math.max(insets.bottom, 20) + 16,
           },
         ]}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        keyboardDismissMode={
+          Platform.OS === "ios" ? "interactive" : "on-drag"
+        }
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
-          {/* Brand header */}
+          {/* Brand Header */}
           <View style={styles.brand}>
             <View style={styles.logoContainer}>
               <Image
-                source={require('../../../assets/images/logo.png')}
+                source={require("../../../assets/images/logo-purple.png")}
                 style={styles.logo}
-                resizeMode="contain"
+                resizeMode="cover"
                 accessible
                 accessibilityRole="image"
-                accessibilityLabel="Agbajo logo"
+                accessibilityLabel="Adugbo logo"
               />
             </View>
 
@@ -175,73 +201,87 @@ export default function LoginScreen() {
               accessibilityRole="header"
               maxFontSizeMultiplier={1.2}
             >
-              Agbajo
+              Adugbo
             </Text>
 
-            <Text style={styles.tagline} maxFontSizeMultiplier={1.3}>
-              Your estate, church, mosque and local shops in one app.
+            <Text style={styles.tagline}>
+              Your community, closer.
             </Text>
           </View>
 
-          {/* Form card */}
+          {/* Main Card Container */}
           <Animated.View
-            style={[styles.card, { transform: [{ translateX: shake }] }]}
+            style={[
+              styles.card,
+              { transform: [{ translateX: shake }] },
+            ]}
           >
             <Text style={styles.heading}>Welcome back</Text>
             <Text style={styles.subtitle}>
-              Sign in to continue to your account.
+              Sign in to reconnect with your community.
             </Text>
 
-            {/* Form-level error (wrong credentials, network, etc.) */}
             {!!formError && (
               <View
                 style={styles.formError}
                 accessibilityRole="alert"
                 accessibilityLiveRegion="polite"
               >
-                <Text style={styles.formErrorText}>{formError}</Text>
+                <Text style={styles.formErrorText}>
+                  {formError}
+                </Text>
               </View>
             )}
 
-            {/* Email / phone */}
+            {/* Identifier Field */}
             <View style={styles.field}>
               <Text style={styles.label} nativeID="identifier-label">
                 Email address or phone number
               </Text>
 
-              <TextInput
+              <View
                 style={[
-                  styles.input,
-                  focused === 'identifier' && styles.inputFocused,
+                  styles.inputWrapper,
+                  focused === "identifier" && styles.inputFocused,
                   !!identifierError && styles.inputError,
                 ]}
-                placeholder="name@example.com or 08012345678"
-                placeholderTextColor={PLACEHOLDER}
-                value={identifier}
-                onChangeText={(text) => {
-                  setIdentifier(text);
-                  if (formError) setFormError('');
-                }}
-                onFocus={() => setFocused('identifier')}
-                onBlur={() => {
-                  setFocused((f) => (f === 'identifier' ? null : f));
-                  if (identifier.length > 0) markTouched('identifier');
-                }}
-                autoCapitalize="none"
-                autoCorrect={false}
-                spellCheck={false}
-                keyboardType="email-address"
-                autoComplete="username"
-                textContentType="username"
-                importantForAutofill="yes"
-                editable={!loading}
-                returnKeyType="next"
-                blurOnSubmit={false}
-                onSubmitEditing={() => passwordRef.current?.focus()}
-                accessibilityLabel="Email address or phone number"
-                accessibilityHint={identifierError || undefined}
-                testID="login-identifier"
-              />
+              >
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="name@example.com or 08012345678"
+                  placeholderTextColor={PLACEHOLDER}
+                  value={identifier}
+                  onChangeText={(text) => {
+                    setIdentifier(text);
+                    if (formError) setFormError("");
+                  }}
+                  onFocus={() => setFocused("identifier")}
+                  onBlur={() => {
+                    setFocused((f) =>
+                      f === "identifier" ? null : f,
+                    );
+                    if (identifier.length > 0) {
+                      markTouched("identifier");
+                    }
+                  }}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  spellCheck={false}
+                  keyboardType="email-address"
+                  autoComplete="username"
+                  textContentType="username"
+                  importantForAutofill="yes"
+                  editable={!loading}
+                  returnKeyType="next"
+                  blurOnSubmit={false}
+                  onSubmitEditing={() =>
+                    passwordRef.current?.focus()
+                  }
+                  accessibilityLabel="Email address or phone number"
+                  accessibilityHint={identifierError || undefined}
+                  testID="login-identifier"
+                />
+              </View>
 
               {!!identifierError && (
                 <Text
@@ -253,7 +293,7 @@ export default function LoginScreen() {
               )}
             </View>
 
-            {/* Password */}
+            {/* Password Field */}
             <View style={styles.field}>
               <View style={styles.labelRow}>
                 <Text style={styles.label}>Password</Text>
@@ -262,39 +302,45 @@ export default function LoginScreen() {
                   <Pressable
                     accessibilityRole="link"
                     accessibilityLabel="Forgot password"
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 8 }}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     disabled={loading}
                     style={({ pressed }) => [
                       styles.forgotWrap,
                       pressed && styles.pressedText,
                     ]}
                   >
-                    <Text style={styles.forgotPassword}>Forgot password?</Text>
+                    <Text style={styles.forgotPassword}>
+                      Forgot password?
+                    </Text>
                   </Pressable>
                 </Link>
               </View>
 
               <View
                 style={[
-                  styles.passwordContainer,
-                  focused === 'password' && styles.inputFocused,
+                  styles.inputWrapper,
+                  focused === "password" && styles.inputFocused,
                   !!passwordError && styles.inputError,
                 ]}
               >
                 <TextInput
                   ref={passwordRef}
-                  style={styles.passwordInput}
+                  style={styles.textInput}
                   placeholder="Enter your password"
                   placeholderTextColor={PLACEHOLDER}
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
-                    if (formError) setFormError('');
+                    if (formError) setFormError("");
                   }}
-                  onFocus={() => setFocused('password')}
+                  onFocus={() => setFocused("password")}
                   onBlur={() => {
-                    setFocused((f) => (f === 'password' ? null : f));
-                    if (password.length > 0) markTouched('password');
+                    setFocused((f) =>
+                      f === "password" ? null : f,
+                    );
+                    if (password.length > 0) {
+                      markTouched("password");
+                    }
                   }}
                   secureTextEntry={!showPassword}
                   autoComplete="current-password"
@@ -311,17 +357,19 @@ export default function LoginScreen() {
                 />
 
                 <Pressable
-                  onPress={() => setShowPassword((v) => !v)}
-                  hitSlop={12}
+                  onPress={() =>
+                    setShowPassword((value) => !value)
+                  }
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                   disabled={loading}
                   accessibilityRole="button"
                   accessibilityLabel={
-                    showPassword ? 'Hide password' : 'Show password'
+                    showPassword ? "Hide password" : "Show password"
                   }
                   style={styles.showWrap}
                 >
                   <Text style={styles.showPassword}>
-                    {showPassword ? 'Hide' : 'Show'}
+                    {showPassword ? "Hide" : "Show"}
                   </Text>
                 </Pressable>
               </View>
@@ -336,47 +384,65 @@ export default function LoginScreen() {
               )}
             </View>
 
-            {/* Submit */}
+            {/* Submit Button */}
             <Pressable
               onPress={submit}
               disabled={loading}
               accessibilityRole="button"
-              accessibilityLabel={loading ? 'Signing in' : 'Sign in'}
-              accessibilityState={{ disabled: loading, busy: loading }}
-              android_ripple={{ color: 'rgba(255,255,255,0.18)' }}
+              accessibilityLabel={
+                loading ? "Signing in" : "Sign in"
+              }
+              accessibilityState={{
+                disabled: loading,
+                busy: loading,
+              }}
+              android_ripple={{
+                color: "rgba(255,255,255,0.2)",
+              }}
               style={({ pressed }) => [
                 styles.submitButton,
-                pressed && !loading && styles.submitButtonPressed,
+                pressed &&
+                  !loading &&
+                  styles.submitButtonPressed,
                 loading && styles.submitButtonLoading,
               ]}
               testID="login-submit"
             >
               {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                <Text style={styles.submitButtonText}>Sign in</Text>
+                <Text style={styles.submitButtonText}>
+                  Sign in
+                </Text>
               )}
             </Pressable>
 
-            {/* Register */}
+            {/* Register Link Row */}
             <View style={styles.registerRow}>
-              <Text style={styles.registerText}>Don’t have an account?</Text>
+              <Text style={styles.registerText}>
+                Don’t have an account?
+              </Text>
 
               <Link href="/(auth)/register" asChild>
                 <Pressable
                   accessibilityRole="link"
                   disabled={loading}
-                  hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
-                  style={({ pressed }) => pressed && styles.pressedText}
+                  hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+                  style={({ pressed }) =>
+                    pressed && styles.pressedText
+                  }
                 >
-                  <Text style={styles.registerLink}>Create account</Text>
+                  <Text style={styles.registerLink}>
+                    Create account
+                  </Text>
                 </Pressable>
               </Link>
             </View>
           </Animated.View>
 
+          {/* Footer Highlights */}
           <Text style={styles.footer}>
-            A simpler way to stay connected to your community.
+            ESTATES · WORSHIP · LOCAL SHOPS · COMMUNITY
           </Text>
         </View>
       </ScrollView>
@@ -384,224 +450,211 @@ export default function LoginScreen() {
   );
 }
 
-const BRAND_GREEN = colors?.primary ?? '#1A4D2E';
-// Orange text on white is ~2.9:1, which fails WCAG AA for small text.
-// Darker orange for text; keep the brighter one for non-text accents.
-const BRAND_ORANGE_TEXT = '#C2570C';
-const PLACEHOLDER = '#94A3B8';
-const ERROR = '#DC2626';
-
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: "#FAF7FF",
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 22,
+    justifyContent: "center",
+    paddingHorizontal: 20,
   },
   container: {
-    width: '100%',
-    maxWidth: 440,
-    alignSelf: 'center',
+    width: "100%",
+    maxWidth: 420,
+    alignSelf: "center",
   },
   brand: {
-    alignItems: 'center',
-    marginBottom: 28,
+    alignItems: "center",
+    marginBottom: 24,
   },
   logoContainer: {
-    width: 84,
-    height: 84,
-    borderRadius: 24,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 76,
+    height: 76,
+    borderRadius: 22,
+    overflow: "hidden", // Crucial: clips the image to the rounded borders
     marginBottom: 12,
-    shadowColor: BRAND_GREEN,
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 4,
+    shadowColor: BRAND_PURPLE,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   logo: {
-    width: 68,
-    height: 68,
+    width: "100%",  // Forces the image to take full width
+    height: "100%", // Forces the image to take full height
   },
   brandName: {
-    fontSize: 32,
-    fontWeight: '800',
-    letterSpacing: -0.8,
-    color: BRAND_GREEN,
+    fontSize: 30,
+    fontWeight: "800",
+    letterSpacing: -0.6,
+    color: BRAND_PURPLE,
   },
   tagline: {
     fontSize: 14,
-    lineHeight: 21,
-    color: '#475569',
-    textAlign: 'center',
-    marginTop: 6,
-    maxWidth: 310,
+    lineHeight: 20,
+    color: "#6E617E",
+    textAlign: "center",
+    marginTop: 4,
+    maxWidth: 290,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: BRAND_GREEN,
-    shadowOpacity: 0.06,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 3,
+    borderColor: "#EBE0FA",
+    shadowColor: BRAND_PURPLE,
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
   heading: {
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    color: '#0F172A',
+    fontSize: 22,
+    fontWeight: "800",
+    letterSpacing: -0.4,
+    color: "#1E1033",
   },
   subtitle: {
     fontSize: 14,
-    lineHeight: 21,
-    color: '#475569',
+    lineHeight: 20,
+    color: "#6E617E",
     marginTop: 4,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   formError: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: "#FFF1F2",
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: "#FECDD3",
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    marginBottom: 18,
+    marginBottom: 16,
   },
   formErrorText: {
     fontSize: 13,
-    lineHeight: 19,
-    color: '#B91C1C',
-    fontWeight: '600',
+    lineHeight: 18,
+    color: BRAND_RED_TEXT,
+    fontWeight: "600",
   },
   field: {
-    marginBottom: 18,
+    marginBottom: 16,
   },
   labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
   },
   label: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#334155',
-    marginBottom: 8,
+    fontWeight: "700",
+    color: "#47365C",
+    marginBottom: 6,
   },
   forgotWrap: {
-    minHeight: 24,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   forgotPassword: {
     fontSize: 13,
-    fontWeight: '700',
-    color: BRAND_ORANGE_TEXT,
+    fontWeight: "700",
+    color: BRAND_RED_TEXT,
   },
-  input: {
+  inputWrapper: {
     minHeight: 52,
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    fontSize: 16, // 16+ prevents iOS zoom and reads comfortably
-    color: '#0F172A',
-    backgroundColor: '#FFFFFF',
+    borderColor: "#D6C4EE",
+    borderRadius: 14,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 14,
+  },
+    textInput: {
+    flex: 1,
+    minHeight: 50,
+    fontSize: 15,
+    color: "#1E1033",
+    paddingVertical: 0,
   },
   inputFocused: {
-    borderColor: BRAND_GREEN,
+    borderColor: BRAND_PURPLE,
     borderWidth: 1.5,
   },
   inputError: {
-    borderColor: ERROR,
+    borderColor: "#B91C1C",
   },
   errorText: {
     fontSize: 12,
-    lineHeight: 17,
-    color: '#B91C1C',
-    marginTop: 6,
-  },
-  passwordContainer: {
-    minHeight: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 12,
-    paddingLeft: 15,
-    paddingRight: 14,
-    backgroundColor: '#FFFFFF',
-  },
-  passwordInput: {
-    flex: 1,
-    minHeight: 50,
-    fontSize: 16,
-    color: '#0F172A',
+    lineHeight: 16,
+    color: BRAND_RED_TEXT,
+    marginTop: 5,
+    marginLeft: 2,
   },
   showWrap: {
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingLeft: 10,
+    justifyContent: "center",
+    paddingLeft: 8,
+    paddingVertical: 4,
   },
   showPassword: {
-    color: BRAND_GREEN,
-    fontWeight: '700',
-    fontSize: 14,
+    color: BRAND_PURPLE,
+    fontWeight: "700",
+    fontSize: 13,
   },
   submitButton: {
     height: 54,
-    backgroundColor: BRAND_GREEN,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: BRAND_PURPLE,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 8,
-    overflow: 'hidden',
+    shadowColor: BRAND_PURPLE,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   submitButtonPressed: {
-    opacity: 0.88,
-    transform: [{ scale: 0.99 }],
+    opacity: 0.9,
+    transform: [{ scale: 0.985 }],
   },
   submitButtonLoading: {
-    opacity: 0.8,
+    opacity: 0.85,
   },
   submitButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
+    letterSpacing: 0.2,
   },
   registerRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 22,
-    gap: 5,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 20,
+    gap: 4,
   },
   registerText: {
-    color: '#475569',
+    color: "#6E617E",
     fontSize: 14,
   },
   registerLink: {
-    color: BRAND_ORANGE_TEXT,
+    color: BRAND_RED_TEXT,
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   pressedText: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
   footer: {
-    textAlign: 'center',
-    fontSize: 12,
-    lineHeight: 19,
-    color: '#64748B',
+    textAlign: "center",
+    fontSize: 11,
+    letterSpacing: 0.8,
+    lineHeight: 16,
+    color: "#7E718E",
     marginTop: 24,
   },
 });

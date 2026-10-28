@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { ColorValue } from 'react-native';
+import { ColorValue, Platform, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '@/lib/theme';
 
 const icon = (ios: string, android: string) =>
@@ -17,12 +17,23 @@ const icon = (ios: string, android: string) =>
   };
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
+        headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
-        headerTitleStyle: { color: colors.text },
+        tabBarLabelStyle: styles.label,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            height: Platform.OS === 'ios' ? 88 : 68 + insets.bottom,
+            paddingBottom: Platform.OS === 'ios' ? 28 : Math.max(insets.bottom, 10),
+            paddingTop: 10,
+          },
+        ],
         sceneStyle: { backgroundColor: colors.bg },
       }}
     >
@@ -60,3 +71,22 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: colors.card,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    elevation: 8,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+    marginTop: 2,
+  },
+});
